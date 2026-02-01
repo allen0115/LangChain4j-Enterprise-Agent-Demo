@@ -1,0 +1,4 @@
+Trae is an adaptive AI IDE that collaborates with developers to write better code faster.
+It features a "Builder Mode" that can autonomously plan and execute complex coding tasks.
+Trae integrates with powerful models like Claude 3.5 Sonnet and GPT-4o.
+One of its key features is the "Context Engine" which understands the entire codebase.

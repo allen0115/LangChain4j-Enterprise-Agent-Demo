@@ -39,4 +39,6 @@ public class AgentController {
     public String chatWithKnowledge(@RequestParam(value = "message", defaultValue = "Why LangChain4j?") String message) {
         return knowledgeBaseAssistant.chat(message);
     }
+
+
 }
