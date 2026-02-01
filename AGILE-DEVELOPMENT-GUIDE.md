@@ -47,6 +47,7 @@
       System_Boundary(c1, "AI Agent Demo") {
         Container(web_app, "Spring Boot App", "Java, LangChain4j", "Handles requests, orchestrates AI flow")
         ContainerDb(vector_db, "Vector Store", "In-Memory", "Stores document embeddings")
+        ContainerDb(chat_memory, "Chat Memory", "In-Memory", "Stores conversation context (MessageWindow)")
         ContainerDb(file_storage, "File Storage", "Local Disk", "Stores uploaded raw files")
         ContainerDb(metadata_db, "Metadata DB", "H2/MySQL", "Stores document status & metadata")
       }
@@ -56,6 +57,7 @@
 
       Rel(user, web_app, "Uploads Docs / Chats", "HTTPS")
       Rel(web_app, vector_db, "Reads/Writes Embeddings")
+      Rel(web_app, chat_memory, "Reads/Writes Context")
       Rel(web_app, file_storage, "Reads/Writes Files")
       Rel(web_app, metadata_db, "Reads/Writes Metadata", "JDBC")
       Rel(web_app, deepseek, "API Calls", "HTTPS")
