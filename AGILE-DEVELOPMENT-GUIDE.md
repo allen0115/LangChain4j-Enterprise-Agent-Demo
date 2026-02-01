@@ -47,6 +47,7 @@
       System_Boundary(c1, "AI Agent Demo") {
         Container(web_app, "Spring Boot App", "Java, LangChain4j", "Handles requests, orchestrates AI flow")
         ContainerDb(vector_db, "Vector Store", "In-Memory", "Stores document embeddings")
+        ContainerDb(chat_memory, "Chat Memory", "In-Memory", "Stores conversation context (MessageWindow)")
         ContainerDb(file_storage, "File Storage", "Local Disk", "Stores uploaded raw files")
         ContainerDb(metadata_db, "Metadata DB", "H2/MySQL", "Stores document status & metadata")
       }
@@ -56,10 +57,32 @@
 
       Rel(user, web_app, "Uploads Docs / Chats", "HTTPS")
       Rel(web_app, vector_db, "Reads/Writes Embeddings")
+      Rel(web_app, chat_memory, "Reads/Writes Context")
       Rel(web_app, file_storage, "Reads/Writes Files")
       Rel(web_app, metadata_db, "Reads/Writes Metadata", "JDBC")
       Rel(web_app, deepseek, "API Calls", "HTTPS")
       Rel(web_app, zhipu, "API Calls", "HTTPS")
+    ```
+
+    **Level 3: Component**
+    ```mermaid
+    C4Component
+      title Component diagram for Spring Boot Application
+
+      Container(web_app, "Spring Boot App", "Java, LangChain4j", "Handles requests, orchestrates AI flow")
+
+      Component(controller, "DocumentController", "Spring REST Controller", "Handles HTTP requests for document upload")
+      Component(facade, "IngestionFacadeService", "Spring Service", "Orchestrates storage and ingestion")
+      Component(storage, "FileStorageService", "Spring Service", "Manages file system operations")
+      Component(loader_factory, "DocumentLoaderFactory", "Factory", "Creates appropriate loader based on file type")
+      Component(ingestor, "EmbeddingStoreIngestor", "LangChain4j", "Splits documents and generates embeddings")
+      Component(repo, "DocumentRepository", "Spring Data JPA", "Persists document metadata")
+
+      Rel(controller, facade, "Calls")
+      Rel(facade, storage, "Stores file")
+      Rel(facade, repo, "Saves metadata")
+      Rel(facade, loader_factory, "Gets loader")
+      Rel(facade, ingestor, "Ingests document")
     ```
 
 - [ ] **UML 类图**: 定义对象结构。
