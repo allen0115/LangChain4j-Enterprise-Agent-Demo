@@ -6,7 +6,7 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
 
 @AiService(
     wiringMode = AiServiceWiringMode.EXPLICIT, // 显式模式：只注入我指定的
-    chatModel = "openAiChatModel", // 默认的 chat model bean 名称
+    chatModel = "chatLanguageModel", // 使用通用的 chat model bean
     contentRetriever = "contentRetriever", // 指定检索器
     tools = {} // 强制不使用任何工具
 )
