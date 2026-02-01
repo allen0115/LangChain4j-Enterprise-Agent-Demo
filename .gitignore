@@ -1,0 +1,36 @@
+# Maven
+target/
+*.war
+*.ear
+*.apk
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata/
+
+# VS Code / Trae
+.vscode/
+.trae/
+
+# macOS
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Secrets (Important!)
+.env
+auth.json
+secrets.properties
+
+# Markdown files (Ignore root md files except README)
+/*.md
+!README.md
