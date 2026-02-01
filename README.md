@@ -3,7 +3,6 @@
 ![Java](https://img.shields.io/badge/Java-17%2B-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.5-green)
 ![LangChain4j](https://img.shields.io/badge/LangChain4j-0.35.0-blue)
-[![Java CI with Maven](https://github.com/your-username/ai-agent-demo/actions/workflows/maven.yml/badge.svg)](https://github.com/your-username/ai-agent-demo/actions/workflows/maven.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 基于 **Spring Boot** + **LangChain4j** 构建的企业级 AI Agent 示范项目。
@@ -16,7 +15,7 @@
 *   **Framework**: Spring Boot 3.2.5
 *   **AI Orchestration**: LangChain4j 0.35.0
 *   **LLM Provider**: DeepSeek (通过 OpenAI 兼容接口)
-*   **Embedding Model**: AllMiniLmL6V2 (本地运行，ONNX)
+*   **Embedding Model**: Zhipu AI (智谱) `embedding-2`
 *   **Vector Store**: InMemoryEmbeddingStore (内存向量库)
 
 ### 📐 系统架构图
@@ -41,6 +40,7 @@ graph TD
     end
     
     ChatAgent & ReActAgent & RagAgent -->|API调用| DeepSeek[DeepSeek API]
+    Ingestor -->|API调用| Zhipu[Zhipu Embedding API]
 ```
 
 ## 🚀 核心功能
@@ -64,7 +64,7 @@ graph TD
 *   **端点**: `GET /api/chat/rag`
 *   **能力**: 基于企业私有文档（ADR）进行回答，拒绝幻觉。
 *   **实现**: `KnowledgeBaseAssistant.java` + `RagConfig.java`
-*   **机制**: 启动时自动加载 `docs/adr/*.md`，使用本地 Embedding 模型向量化。
+*   **机制**: 启动时自动加载 `docs/adr/*.md`，调用智谱 Embedding API 向量化并存入内存。
 *   **场景**: 内部知识问答、政策咨询。
 
 ## 🛠️ 快速开始
@@ -72,20 +72,40 @@ graph TD
 ### 前置要求
 *   JDK 17+
 *   Maven 3.x
-*   **DeepSeek API Key** (或其他兼容 OpenAI 格式的 Key)
+*   **DeepSeek API Key**
+*   **Zhipu AI API Key** (用于 Embedding)
 
-### 配置
-项目默认配置位于 `src/main/resources/application.properties`。
-**注意**: Embedding 模型运行在本地，不需要 API Key。
+### 配置与运行
 
-### 运行
-1.  设置环境变量并启动：
+1.  **克隆项目**
     ```bash
-    export DEEPSEEK_API_KEY=sk-your-actual-api-key
-    mvn spring-boot:run
+    git clone https://github.com/your-username/ai-agent-demo.git
+    cd ai-agent-demo
     ```
 
-2.  应用启动后，会自动将 `docs/` 下的文档加载到内存向量库中。
+2.  **配置密钥**
+    复制示例配置文件并填入您的 Key：
+    ```bash
+    cp .env.example .env
+    # 编辑 .env 文件，填入 DEEPSEEK_API_KEY 和 ZHIPU_API_KEY
+    ```
+
+3.  **启动应用**
+    使用提供的脚本启动（它会自动处理环境变量）：
+    ```bash
+    chmod +x run.sh
+    ./run.sh
+    ```
+    
+    或者使用 Maven 手动启动（需确保环境变量已设置）：
+    ```bash
+    mvn spring-boot:run -Dspring-boot.run.jvmArguments="-DZHIPU_API_KEY=$ZHIPU_API_KEY -DDEEPSEEK_API_KEY=$DEEPSEEK_API_KEY"
+    ```
+
+4.  **验证启动**
+    应用启动后，控制台应显示：
+    *   `Tomcat started on port 8080`
+    *   `已将 ADR 文档加载到长期记忆中`
 
 ### 测试用例
 
@@ -106,8 +126,9 @@ src/main/java/com/example/aiagent/
 │   ├── ReActAssistant.java         # 工具调用
 │   └── KnowledgeBaseAssistant.java # RAG 问答
 ├── config/                    # 配置类
+│   ├── ChatConfig.java        # DeepSeek 模型配置
 │   ├── MemoryConfig.java      # 短期记忆配置
-│   └── RagConfig.java         # RAG/Embedding 配置
+│   └── RagConfig.java         # RAG/Zhipu Embedding 配置
 ├── controller/                # REST 接口
 │   └── AgentController.java
 └── tools/                     # Agent 可用工具 (@Tool)
@@ -117,10 +138,10 @@ src/main/java/com/example/aiagent/
 ## 📝 常见问题
 
 *   **Q: 启动时报错 `401 Unauthorized`?**
-    *   A: 请检查是否设置了 `DEEPSEEK_API_KEY` 环境变量。
+    *   A: 请检查 `.env` 文件中的 Key 是否正确，以及是否使用了 `./run.sh` 启动（确保 Key 被正确传递给 JVM）。
 
 *   **Q: RAG 问答为什么说不知道?**
-    *   A: 确保 `docs/adr/` 目录下有文档，且应用启动日志中显示 `✅ 已将 ADR 文档加载到长期记忆中`。
+    *   A: 确保 `docs/adr/` 目录下有文档，且应用启动日志中显示 `已将 ADR 文档加载到长期记忆中`。同时检查智谱 API Key 是否有效。
 
-*   **Q: 为什么 Embedding 不需要 Key?**
-    *   A: 我们使用了 `langchain4j-embeddings-all-minilm-l6-v2`，模型直接嵌入在 Jar 包中，在本地 JVM 内运行，无需联网。
+*   **Q: 为什么这里用智谱 Embedding 而不是本地模型?**
+    *   A: 我们在 [ADR-0002](docs/adr/0002-switch-to-zhipu-embedding.md) 中决定切换到云端 Embedding，以获得更好的中文语义理解能力。
