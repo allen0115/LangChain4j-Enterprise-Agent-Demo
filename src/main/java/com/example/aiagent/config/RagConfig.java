@@ -4,12 +4,13 @@ import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.parser.TextDocumentParser;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
+import dev.langchain4j.model.zhipu.ZhipuAiEmbeddingModel;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,16 +20,22 @@ import static dev.langchain4j.data.document.loader.FileSystemDocumentLoader.load
 @Configuration
 public class RagConfig {
 
+    @Value("${langchain4j.zhipu.embedding-model.api-key}")
+    private String zhipuApiKey;
+
     // 1. 定义向量存储
     @Bean
     public EmbeddingStore<TextSegment> embeddingStore() {
         return new InMemoryEmbeddingStore<>();
     }
 
-    // 2. 定义本地 Embedding 模型 (无需 API Key，免费且快速)
+    // 2. 定义智谱 Embedding 模型
     @Bean
     public EmbeddingModel embeddingModel() {
-        return new AllMiniLmL6V2EmbeddingModel();
+        return ZhipuAiEmbeddingModel.builder()
+                .apiKey(zhipuApiKey)
+                .model("embedding-2") // 智谱的通用 Embedding 模型
+                .build();
     }
 
     // 3. 定义检索器
